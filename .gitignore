@@ -12,3 +12,6 @@ backend/uploads
 backend/service-account*.json
 backend_fastapi/service-account*.json
 **/service-account*.json
+
+# Local Netlify folder
+.netlify
