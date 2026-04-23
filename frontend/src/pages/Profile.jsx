@@ -69,23 +69,23 @@ export default function Profile() {
               </button>
             </div>
 
-            {/* Admin card */}
-            <div className="glass-card p-5">
-              <div className="flex items-center gap-2 text-sm font-bold">
-                <span>⚙️</span> Admin Panel
+            {/* Admin card — only visible to admins */}
+            {user.isAdmin ? (
+              <div className="glass-card p-5">
+                <div className="flex items-center gap-2 text-sm font-bold">
+                  <span>⚙️</span> Admin Panel
+                </div>
+                <div className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+                  You can manage manual news posts, live updates, and AI summaries.
+                </div>
+                <Link
+                  to="/admin"
+                  className="btn-primary mt-3 inline-flex"
+                >
+                  Open Admin Panel →
+                </Link>
               </div>
-              <div className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
-                {user.isAdmin
-                  ? "You can manage manual news posts, live updates, and AI summaries."
-                  : "Your account is not in ADMIN_EMAILS yet. Update backend/.env if you want admin access."}
-              </div>
-              <Link
-                to="/admin"
-                className="btn-primary mt-3 inline-flex"
-              >
-                Open Admin Panel →
-              </Link>
-            </div>
+            ) : null}
           </div>
         ) : null}
       </main>

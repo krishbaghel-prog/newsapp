@@ -190,10 +190,14 @@ export default function Admin() {
         ) : null}
 
         {user && !canManage ? (
-          <div className="glass-card p-4 text-sm text-amber-700 dark:text-amber-300 animate-fade-in">
-            ⚠️ This account is signed in but not allowlisted for admin actions. Add your email to{" "}
-            <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-white/5">ADMIN_EMAILS</code> in{" "}
-            <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-white/5">backend/.env</code>.
+          <div className="glass-card p-6 text-center animate-fade-in">
+            <div className="mx-auto mb-3 text-4xl">🚫</div>
+            <div className="mb-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+              Access Denied
+            </div>
+            <div className="text-sm text-zinc-500 dark:text-zinc-400">
+              You don't have admin permissions.
+            </div>
           </div>
         ) : null}
 
