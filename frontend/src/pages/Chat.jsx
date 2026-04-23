@@ -156,7 +156,7 @@ export default function Chat() {
         </div>
 
         {/* Input */}
-        <div className="sticky bottom-[56px] glass-card p-3">
+        <div className="sticky glass-card p-3" style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))' }}>
           <div className="flex gap-2">
             <input
               className="w-full rounded-xl border-zinc-200/60 bg-white px-4 py-2.5 text-sm transition focus:border-brand-400 focus:ring-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"

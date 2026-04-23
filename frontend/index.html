@@ -2,12 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
     <meta name="description" content="NewsFlow — Your premium short-form news experience. Real-time headlines, AI-powered summaries, and multi-source comparison." />
     <title>NewsFlow — Smart News</title>
+
+    <!-- Favicon & Apple Touch Icon -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <!-- PWA / Mobile Web App -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="NewsFlow" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#fff8f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121215" media="(prefers-color-scheme: dark)" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
     <script>
       // Apply saved theme BEFORE render to prevent flash
       (function() {
