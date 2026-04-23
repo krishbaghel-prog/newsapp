@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../services/api";
+import { addToVerify, isInVerifyQueue } from "../services/verifyStore";
 
 function toIso(value) {
   try {
@@ -84,6 +85,19 @@ const RemoveIcon = () => (
   </svg>
 );
 
+const VerifyIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
+const VerifiedCheckIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <polyline points="9 12 11 14 15 10" fill="none" stroke="#fff" strokeWidth="2.5" />
+  </svg>
+);
+
 export default function NewsCard({
   item,
   initiallySaved = false,
@@ -97,10 +111,19 @@ export default function NewsCard({
   const [playingVideo, setPlayingVideo] = useState(false);
   const [shareToast, setShareToast] = useState("");
   const [imgError, setImgError] = useState(false);
+  const [inVerifyQueue, setInVerifyQueue] = useState(false);
+  const [verifyToast, setVerifyToast] = useState("");
 
   useEffect(() => {
     setSaved(Boolean(initiallySaved));
   }, [initiallySaved, item?._id, item?.url]);
+
+  // Check if already in verify queue
+  useEffect(() => {
+    if (item?.url) {
+      setInVerifyQueue(isInVerifyQueue(item.url));
+    }
+  }, [item?.url]);
 
   const timeAgo = useMemo(() => timeSince(item?.publishedAt), [item?.publishedAt]);
   const youtubeId = useMemo(() => extractYouTubeId(item?.url), [item?.url]);
@@ -139,6 +162,20 @@ export default function NewsCard({
       setErr(e?.response?.data?.error || "Could not update saved articles.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  function handleVerify() {
+    if (inVerifyQueue) return;
+
+    const added = addToVerify(item);
+    if (added) {
+      setInVerifyQueue(true);
+      setVerifyToast("Sent for AI verification!");
+      setTimeout(() => setVerifyToast(""), 2500);
+    } else {
+      setVerifyToast("Already in verification queue");
+      setTimeout(() => setVerifyToast(""), 2000);
     }
   }
 
@@ -257,6 +294,20 @@ export default function NewsCard({
           </div>
 
           <div className="news-card-buttons">
+            {/* Verify button */}
+            <button
+              type="button"
+              onClick={handleVerify}
+              disabled={inVerifyQueue}
+              className={clsx(
+                "news-card-action-btn",
+                inVerifyQueue && "news-card-action-btn--verified"
+              )}
+              title={inVerifyQueue ? "In verification queue" : "Verify with AI"}
+            >
+              {inVerifyQueue ? <VerifiedCheckIcon /> : <VerifyIcon />}
+            </button>
+
             {/* Share button */}
             <button
               type="button"
@@ -300,6 +351,13 @@ export default function NewsCard({
             </a>
           </div>
         </div>
+
+        {/* Verify toast */}
+        {verifyToast && (
+          <div className="news-card-verify-toast animate-slide-up">
+            🛡️ {verifyToast}
+          </div>
+        )}
 
         {/* Share toast */}
         {shareToast && (

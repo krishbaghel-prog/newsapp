@@ -979,6 +979,162 @@
   }
 
   /* ═══════════════════════════════════════════
+     NEWS CARD VERIFY TOAST
+     ═══════════════════════════════════════════ */
+
+  .news-card-verify-toast {
+    @apply mt-2 rounded-lg px-3 py-1.5 text-center text-xs font-semibold;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.06));
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.15);
+  }
+  .dark .news-card-verify-toast {
+    color: #34d399;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08));
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+
+  .news-card-action-btn--verified {
+    background: rgba(16, 185, 129, 0.12) !important;
+    color: #10b981 !important;
+  }
+  .dark .news-card-action-btn--verified {
+    background: rgba(52, 211, 153, 0.15) !important;
+    color: #34d399 !important;
+  }
+
+  /* ═══════════════════════════════════════════
+     TRUSTED PAGE — ACTION ROW & BUTTONS
+     ═══════════════════════════════════════════ */
+
+  .trust-action-row {
+    @apply mt-5 flex flex-wrap items-center justify-center gap-3;
+  }
+
+  .trust-analyze-btn {
+    @apply inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all duration-200;
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 2px 12px rgba(16, 185, 129, 0.3);
+  }
+  .trust-analyze-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  }
+  .trust-analyze-btn:disabled {
+    @apply cursor-not-allowed opacity-50;
+    transform: none !important;
+  }
+
+  .trust-download-btn {
+    @apply inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-200;
+    background: rgba(0, 0, 0, 0.06);
+    color: #4a4a4a;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  .trust-download-btn:hover:not(:disabled) {
+    background: rgba(244, 91, 91, 0.08);
+    border-color: rgba(244, 91, 91, 0.2);
+    color: #c53030;
+    transform: translateY(-1px);
+  }
+  .dark .trust-download-btn {
+    background: rgba(255, 255, 255, 0.06);
+    color: #d4bfbf;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .dark .trust-download-btn:hover:not(:disabled) {
+    background: rgba(255, 138, 138, 0.1);
+    border-color: rgba(255, 138, 138, 0.2);
+    color: #ffb8b8;
+  }
+  .trust-download-btn:disabled {
+    @apply cursor-not-allowed opacity-50;
+    transform: none !important;
+  }
+
+  /* Toast notification for trusted page */
+  .trust-toast {
+    @apply mb-4 rounded-xl px-4 py-2.5 text-center text-sm font-semibold;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.15);
+  }
+  .dark .trust-toast {
+    color: #34d399;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.06));
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+
+  /* Remove button on trust cards */
+  .trust-remove-btn {
+    @apply flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-all duration-200;
+  }
+  .trust-remove-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+  .dark .trust-remove-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+  }
+
+  /* Source line on trust cards */
+  .trust-card-source {
+    @apply mt-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500;
+  }
+
+  /* Read link on trust cards */
+  .trust-card-link {
+    @apply ml-auto text-xs font-bold transition-colors;
+    color: #f45b5b;
+  }
+  .trust-card-link:hover {
+    color: #c53030;
+  }
+  .dark .trust-card-link {
+    color: #ff8a8a;
+  }
+  .dark .trust-card-link:hover {
+    color: #ffb8b8;
+  }
+
+  /* Pending section styles */
+  .trust-section-dot--pending {
+    @apply bg-zinc-400;
+    box-shadow: 0 0 8px rgba(161, 161, 170, 0.4);
+  }
+
+  .trust-section-title--pending {
+    @apply text-zinc-600 dark:text-zinc-400;
+  }
+
+  .trust-section-count--pending {
+    @apply bg-zinc-100 text-zinc-600 dark:bg-zinc-500/15 dark:text-zinc-400;
+  }
+
+  .trust-card--pending {
+    background: linear-gradient(135deg, rgba(161, 161, 170, 0.06), rgba(161, 161, 170, 0.02));
+    border-color: rgba(161, 161, 170, 0.12);
+  }
+  .dark .trust-card--pending {
+    background: linear-gradient(135deg, rgba(161, 161, 170, 0.08), rgba(161, 161, 170, 0.03));
+    border-color: rgba(161, 161, 170, 0.12);
+  }
+  .trust-card--pending:hover {
+    border-color: rgba(161, 161, 170, 0.25);
+    box-shadow: 0 4px 16px rgba(161, 161, 170, 0.08);
+  }
+
+  .trust-confidence--pending {
+    background: linear-gradient(135deg, rgba(161, 161, 170, 0.15), rgba(161, 161, 170, 0.08));
+    @apply text-zinc-600 dark:text-zinc-400;
+  }
+
+  .trust-card-badge--pending {
+    @apply bg-zinc-100 text-zinc-600 dark:bg-zinc-500/15 dark:text-zinc-400;
+  }
+
+  /* ═══════════════════════════════════════════
      PREMIUM BOTTOM NAVIGATION
      ═══════════════════════════════════════════ */
 

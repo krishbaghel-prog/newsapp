@@ -180,5 +180,121 @@ router.get("/trust-feed", async (req, res, next) => {
   }
 });
 
+// POST /api/chat/verify-articles
+// body: { articles: [{ title, summary, source, url, publishedAt, category }] }
+// Returns per-article verification results.
+router.post("/verify-articles", async (req, res, next) => {
+  try {
+    const schema = z.object({
+      articles: z.array(z.object({
+        title: z.string().optional().default(""),
+        summary: z.string().optional().default(""),
+        source: z.string().optional().default(""),
+        url: z.string().optional().default(""),
+        publishedAt: z.string().optional().default(""),
+        category: z.string().optional().default("")
+      })).min(1).max(20)
+    });
+    const body = schema.parse(req.body);
+    const userArticles = body.articles;
+
+    const system =
+      "You are a strict fact-checking assistant. " +
+      "Analyze each article for credibility based on the headline, summary, and source. " +
+      "Compare across the provided set for corroboration. " +
+      "Respond ONLY in valid JSON with shape: " +
+      "{ results: [{ url, status, reason, confidence }] }. " +
+      "status must be one of: verified, caution. " +
+      "confidence must be one of: high, medium, low. " +
+      "Provide a brief reason for each classification.";
+
+    const context = `ARTICLES TO VERIFY:\n\n${formatArticles(userArticles)}`;
+
+    let results = [];
+    let provider = "fallback";
+
+    try {
+      const answer = await aiChat({
+        system,
+        messages: [
+          {
+            role: "user",
+            content:
+              "Verify each of these articles for credibility.\n" +
+              "Classify as 'verified' if it appears credible from a reputable source.\n" +
+              "Classify as 'caution' if the claim is uncertain or from an unreliable source.\n\n" +
+              context
+          }
+        ],
+        temperature: 0.1
+      });
+
+      const parsed = parseJsonLoose(answer);
+      provider = getProvider();
+
+      if (Array.isArray(parsed?.results)) {
+        results = parsed.results;
+      }
+    } catch {
+      // AI unavailable — use heuristic fallback
+      provider = "fallback";
+    }
+
+    // If AI returned no results, apply heuristic fallback
+    if (results.length === 0) {
+      // Clickbait / suspicious patterns
+      const suspiciousPatterns = [
+        /you won't believe/i, /shocking/i, /this one trick/i,
+        /doctors hate/i, /make money fast/i, /click here/i,
+        /\$\$\$/i, /free iphone/i, /act now/i
+      ];
+
+      results = userArticles.map((article) => {
+        const title = (article.title || "").trim();
+        const summary = (article.summary || "").trim();
+        const source = (article.source || "").trim();
+        const url = (article.url || "").trim();
+
+        // Check for red flags
+        const hasTitle = title.length > 10;
+        const hasSummary = summary.length > 20;
+        const hasSource = source.length > 0;
+        const hasUrl = url.startsWith("http");
+        const isClickbait = suspiciousPatterns.some((p) => p.test(title) || p.test(summary));
+        const titleAllCaps = title === title.toUpperCase() && title.length > 20;
+
+        // Score-based: real articles score high
+        let score = 0;
+        if (hasTitle) score += 2;
+        if (hasSummary) score += 2;
+        if (hasSource) score += 2;
+        if (hasUrl) score += 1;
+        if (summary.length > 80) score += 1;   // detailed summary
+        if (title.length > 25) score += 1;      // descriptive headline
+        if (isClickbait) score -= 4;
+        if (titleAllCaps) score -= 2;
+        if (!hasSource) score -= 2;
+
+        const isVerified = score >= 4;
+
+        return {
+          url: article.url,
+          status: isVerified ? "verified" : "caution",
+          reason: isVerified
+            ? `Article from ${source || "news outlet"} has a detailed headline and summary consistent with legitimate reporting.`
+            : isClickbait
+              ? "Headline contains patterns commonly associated with clickbait or misleading content."
+              : `Limited information available for full verification. ${!hasSource ? "No source attribution found." : ""} ${!hasSummary ? "Summary is too brief for analysis." : ""}`.trim(),
+          confidence: isVerified ? (hasSummary && summary.length > 80 ? "high" : "medium") : "low"
+        };
+      });
+    }
+
+    res.json({ provider, results });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
 
