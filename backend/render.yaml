@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: newsflow-backend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production

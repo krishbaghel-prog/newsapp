@@ -1,0 +1,19 @@
+{
+  "name": "inshorts-clone-newsapp",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,magenta \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "npm --workspace backend run dev",
+    "dev:frontend": "npm --workspace frontend run dev",
+    "build": "npm --workspace frontend run build",
+    "doctor": "node scripts/doctor.mjs",
+    "start": "npm --workspace backend run start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
+}

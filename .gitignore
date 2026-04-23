@@ -1,0 +1,12 @@
+node_modules
+.DS_Store
+dist
+build
+.env
+.env.*
+!.env.example
+coverage
+.vscode
+
+backend/uploads
+backend/service-account*.json

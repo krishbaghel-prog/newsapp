@@ -1,0 +1,105 @@
+services:
+  - type: web
+    name: newsapp-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PORT
+        value: 4000
+      - key: MONGODB_URI
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: AUTH_MODE
+        sync: false
+      - key: DEV_USER_ID
+        sync: false
+      - key: DEV_USER_NAME
+        sync: false
+      - key: DEV_USER_EMAIL
+        sync: false
+      - key: DEV_USER_PHOTO_URL
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: NEWSAPI_KEY
+        sync: false
+      - key: GNEWS_KEY
+        sync: false
+      - key: CURRENTS_API_KEY
+        sync: false
+      - key: MEDIASTACK_KEY
+        sync: false
+      - key: NEWSDATA_API_KEY
+        sync: false
+      - key: NEWSDATA_BASE_URL
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: AI_PROVIDER
+        sync: false
+      - key: AI_FALLBACKS
+        sync: false
+      - key: SUMMARY_MODE
+        sync: false
+      - key: GROK_API_KEY
+        sync: false
+      - key: GROK_BASE_URL
+        sync: false
+      - key: GROK_MODEL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        sync: false
+      - key: OPENAI_MODEL
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_BASE_URL
+        sync: false
+      - key: ANTHROPIC_MODEL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_BASE_URL
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false
+
+  - type: web
+    name: newsapp-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_AUTH_MODE
+        sync: false
+      - key: VITE_FIREBASE_API_KEY
+        sync: false
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        sync: false
+      - key: VITE_FIREBASE_PROJECT_ID
+        sync: false
+      - key: VITE_FIREBASE_APP_ID
+        sync: false
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        sync: false
