@@ -22,7 +22,7 @@ const discussionRoutes = require("./routes/discussion.routes");
 const app = express();
 const configuredOrigins = String(process.env.CLIENT_ORIGIN || "")
   .split(",")
-  .map((value) => value.trim())
+  .map((value) => value.trim().replace(/\/+$/, ""))
   .filter(Boolean);
 
 function isLocalOrigin(origin) {
@@ -32,8 +32,9 @@ function isLocalOrigin(origin) {
 function isAllowedOrigin(origin) {
   if (!origin) return true;
   if (configuredOrigins.length === 0) return true;
-  if (configuredOrigins.includes(origin)) return true;
-  return process.env.NODE_ENV !== "production" && isLocalOrigin(origin);
+  const normalizedOrigin = origin.replace(/\/+$/, "");
+  if (configuredOrigins.includes(normalizedOrigin)) return true;
+  return isLocalOrigin(origin);
 }
 
 app.use(
