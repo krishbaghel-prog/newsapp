@@ -71,6 +71,22 @@ function timeAgo(dateStr) {
   return `${days}d ago`;
 }
 
+/** Sanitize API error messages — never show internal service details */
+function friendlyError(e, fallback) {
+  const raw = e?.response?.data?.error || e?.message || "";
+  const status = e?.response?.status;
+  if (
+    status === 401 || status === 503 ||
+    raw.toLowerCase().includes("auth") ||
+    raw.toLowerCase().includes("unavailable") ||
+    raw.toLowerCase().includes("sign in") ||
+    raw.toLowerCase().includes("token")
+  ) {
+    return "Please sign in to perform this action.";
+  }
+  return raw || fallback;
+}
+
 export default function Discuss() {
   const { user, loading: authLoading } = useAuth();
   const [category, setCategory] = useState("all");
@@ -83,6 +99,13 @@ export default function Discuss() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", content: "", category: "general" });
   const [postBusy, setPostBusy] = useState(false);
+
+  // Auto-clear error after 4s
+  useEffect(() => {
+    if (!err) return;
+    const t = setTimeout(() => setErr(""), 4000);
+    return () => clearTimeout(t);
+  }, [err]);
 
   // Expanded discussion
   const [expanded, setExpanded] = useState(null);
@@ -97,7 +120,11 @@ export default function Discuss() {
       const res = await api.get("/discussions", { params: { category, page: 1, limit: 30 } });
       setItems(res.data?.items || []);
     } catch (e) {
-      setErr(e?.response?.data?.error || "Failed to load discussions.");
+      const msg2 = e?.response?.data?.error || "";
+      // Don't show auth errors on the listing (it's public) — only show real fetch errors
+      if (!msg2.toLowerCase().includes("auth") && !msg2.toLowerCase().includes("unavailable")) {
+        setErr(msg2 || "Failed to load discussions.");
+      }
     } finally {
       setBusy(false);
     }
@@ -119,7 +146,7 @@ export default function Discuss() {
       setShowForm(false);
       await loadDiscussions();
     } catch (e2) {
-      setErr(e2?.response?.data?.error || "Failed to post.");
+      setErr(friendlyError(e2, "Failed to post. Please try again."));
     } finally {
       setPostBusy(false);
     }
@@ -150,7 +177,7 @@ export default function Discuss() {
       setDetail(res.data?.item || null);
       await loadDiscussions();
     } catch (e2) {
-      setErr(e2?.response?.data?.error || "Failed to reply.");
+      setErr(friendlyError(e2, "Failed to reply. Please try again."));
     } finally {
       setReplyBusy(false);
     }
@@ -170,7 +197,7 @@ export default function Discuss() {
         setDetail((prev) => ({ ...prev, likeCount: res.data.likeCount }));
       }
     } catch (e2) {
-      setErr(e2?.response?.data?.error || "Failed to like.");
+      setErr(friendlyError(e2, "Failed to like."));
     }
   }
 
@@ -182,7 +209,7 @@ export default function Discuss() {
       setMsg("Discussion deleted.");
       await loadDiscussions();
     } catch (e2) {
-      setErr(e2?.response?.data?.error || "Failed to delete.");
+      setErr(friendlyError(e2, "Failed to delete."));
     }
   }
 
