@@ -23,9 +23,6 @@ export default function Pitch() {
           <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-black/10 blur-3xl" />
           
           <div className="relative z-10 mx-auto max-w-2xl">
-            <span className="mb-4 inline-block rounded-full bg-white/20 px-4 py-1 text-xs font-bold tracking-widest text-white backdrop-blur-md">
-              🏆 HACKATHON WINNING PITCH
-            </span>
             <h1 className="mb-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl text-white">
               NewsFlows
             </h1>

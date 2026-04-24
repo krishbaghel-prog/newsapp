@@ -10,3 +10,41 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: AUTH_MODE
+        value: firebase
+      - key: SUMMARY_MODE
+        value: none
+      - key: AI_PROVIDER
+        value: gemini
+      - key: AI_FALLBACKS
+        value: grok,openai,claude
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: GROK_MODEL
+        value: grok-2-latest
+      - key: MONGODB_URI
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROK_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: NEWSAPI_KEY
+        sync: false
+      - key: GNEWS_KEY
+        sync: false
+      - key: CURRENTS_API_KEY
+        sync: false
+      - key: MEDIASTACK_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
