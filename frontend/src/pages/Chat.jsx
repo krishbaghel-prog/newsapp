@@ -1,9 +1,79 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import TopBar from "../components/TopBar";
 import { api } from "../services/api";
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+/* ── Render message text with links, bold and emojis formatted nicely ── */
+function MessageContent({ text }) {
+  const lines = String(text || "").split("\n");
+  return (
+    <div className="space-y-1">
+      {lines.map((line, i) => {
+        // URL lines → clickable link
+        const urlMatch = line.match(/^(\s*🔗\s*)(https?:\/\/\S+)/);
+        if (urlMatch) {
+          const url = urlMatch[2];
+          const domain = (() => { try { return new URL(url).hostname.replace("www.", ""); } catch { return url.slice(0, 40); } })();
+          return (
+            <div key={i} className="pl-4">
+              <a
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-xs font-medium text-blue-300 underline-offset-2 hover:underline dark:text-blue-400 transition-colors"
+              >
+                🔗 {domain}
+              </a>
+            </div>
+          );
+        }
+
+        // Bold (**text**) support
+        const parts = line.split(/(\*\*[^*]+\*\*)/g);
+        const rendered = parts.map((part, j) => {
+          if (part.startsWith("**") && part.endsWith("**")) {
+            return <strong key={j} className="font-semibold">{part.slice(2, -2)}</strong>;
+          }
+          return part;
+        });
+
+        // Empty line → spacer
+        if (!line.trim()) return <div key={i} className="h-1" />;
+
+        // Section headers (start with emoji + space)
+        if (/^[📰📊🔑📌⚡ℹ️💡🎯]\s/.test(line.trim())) {
+          return (
+            <p key={i} className="font-semibold text-brand-300 dark:text-brand-400">
+              {rendered}
+            </p>
+          );
+        }
+
+        // Numbered list items
+        if (/^\d+\.\s/.test(line.trim())) {
+          return (
+            <p key={i} className="pl-1 font-medium">
+              {rendered}
+            </p>
+          );
+        }
+
+        // Indented source/summary lines
+        if (/^\s{3,}/.test(line)) {
+          return (
+            <p key={i} className="pl-4 text-xs opacity-75">
+              {rendered}
+            </p>
+          );
+        }
+
+        return <p key={i}>{rendered}</p>;
+      })}
+    </div>
+  );
 }
 
 export default function Chat() {
@@ -12,21 +82,29 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const bottomRef = useRef(null);
+
   const [messages, setMessages] = useState(() => [
     {
       id: `m_${nowIso()}`,
       role: "assistant",
       text:
         "👋 Hi! I'm your AI news assistant. Ask me about the latest headlines.\n\n" +
-        "Commands:\n" +
+        "Try these:\n" +
+        "• What's happening with Iran and USA?\n" +
+        "• Latest tech news\n" +
         "• /set <topic> — save a baseline topic\n" +
-        "• /latest <question> — ask using recent headlines\n" +
         "• /compare <question> — compare against your baseline",
       ts: nowIso()
     }
   ]);
 
   const baselineLabel = useMemo(() => (baseline ? baseline : "(none)"), [baseline]);
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, busy]);
 
   async function send() {
     const raw = input.trim();
@@ -46,7 +124,7 @@ export default function Chat() {
         {
           id: `a_${nowIso()}`,
           role: "assistant",
-          text: `✅ Baseline set to: ${nextBaseline || "(empty)"}`,
+          text: `✅ Baseline set to: **${nextBaseline || "(empty)"}**\n\nNow try: /compare <your question>`,
           ts: nowIso()
         }
       ]);
@@ -77,15 +155,23 @@ export default function Chat() {
           id: `a_${nowIso()}`,
           role: "assistant",
           text: response.data?.answer || "No answer.",
+          provider: response.data?.provider,
           ts: nowIso()
         }
       ]);
     } catch (e) {
-      setErr(e?.response?.data?.detail || e?.response?.data?.error || "Chat failed.");
+      setErr(e?.response?.data?.detail || e?.response?.data?.error || "Chat failed. Please try again.");
     } finally {
       setBusy(false);
     }
   }
+
+  const SUGGESTIONS = [
+    "What's happening today?",
+    "Latest tech news",
+    "Biggest world events",
+    "Business headlines"
+  ];
 
   return (
     <div className="pb-24">
@@ -93,17 +179,17 @@ export default function Chat() {
 
       <main className="page-container flex flex-col gap-3 py-4">
         {/* Status bar */}
-        <div className="glass-card flex flex-wrap items-center gap-3 p-4 text-sm">
+        <div className="glass-card flex flex-wrap items-center gap-3 p-3 text-sm">
           <div className="flex items-center gap-2">
-            <span className="text-zinc-400 dark:text-zinc-500">Baseline:</span>
-            <span className="rounded-full bg-brand-50 px-3 py-1 font-semibold text-brand-700 dark:bg-brand-500/10 dark:text-brand-400">
+            <span className="text-zinc-400 dark:text-zinc-500 text-xs">Baseline:</span>
+            <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700 dark:bg-brand-500/10 dark:text-brand-400">
               {baselineLabel}
             </span>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-zinc-400 dark:text-zinc-500">Category:</span>
+            <span className="text-zinc-400 dark:text-zinc-500 text-xs">Category:</span>
             <select
-              className="rounded-xl border-zinc-200/60 bg-white px-3 py-1.5 text-sm font-medium transition focus:border-brand-400 focus:ring-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200"
+              className="rounded-xl border-zinc-200/60 bg-white px-2.5 py-1 text-xs font-medium transition focus:border-brand-400 focus:ring-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
@@ -122,10 +208,26 @@ export default function Chat() {
         </div>
 
         {err ? (
-          <div className="rounded-2xl border border-red-200/60 bg-red-50/80 p-4 text-sm text-red-700 dark:border-red-500/10 dark:bg-red-500/5 dark:text-red-200">
+          <div className="rounded-2xl border border-red-200/60 bg-red-50/80 p-3 text-sm text-red-700 dark:border-red-500/10 dark:bg-red-500/5 dark:text-red-200">
             {err}
           </div>
         ) : null}
+
+        {/* Quick suggestion chips */}
+        {messages.length <= 1 && (
+          <div className="flex flex-wrap gap-2">
+            {SUGGESTIONS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => { setInput(s); }}
+                className="rounded-full border border-zinc-200/60 bg-white/60 px-3 py-1.5 text-xs font-medium text-zinc-600 backdrop-blur transition hover:border-brand-400 hover:text-brand-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-400 dark:hover:text-brand-400"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Messages */}
         <div className="min-h-[50vh] space-y-3">
@@ -135,11 +237,16 @@ export default function Chat() {
               className={
                 message.role === "user"
                   ? "ml-auto max-w-[88%] animate-slide-up rounded-2xl rounded-br-md bg-gradient-to-r from-brand-600 to-brand-500 p-4 text-sm text-white shadow-glow"
-                  : "mr-auto max-w-[88%] animate-slide-up glass-card p-4 text-sm text-zinc-700 dark:text-zinc-200"
+                  : "mr-auto max-w-[92%] animate-slide-up glass-card p-4 text-sm text-zinc-700 dark:text-zinc-200"
               }
-              style={{ whiteSpace: "pre-wrap", animationDelay: `${index * 30}ms` }}
+              style={{ animationDelay: `${index * 20}ms` }}
             >
-              {message.text}
+              <MessageContent text={message.text} />
+              {message.provider && message.provider !== "fallback" && (
+                <div className="mt-2 text-[10px] opacity-50">
+                  ⚡ Powered by {message.provider}
+                </div>
+              )}
             </div>
           ))}
 
@@ -150,9 +257,11 @@ export default function Chat() {
                 <div className="h-2 w-2 animate-bounce rounded-full bg-brand-400" style={{ animationDelay: "150ms" }} />
                 <div className="h-2 w-2 animate-bounce rounded-full bg-brand-400" style={{ animationDelay: "300ms" }} />
               </div>
-              Thinking...
+              Searching latest news...
             </div>
           ) : null}
+
+          <div ref={bottomRef} />
         </div>
 
         {/* Input */}
@@ -160,12 +269,10 @@ export default function Chat() {
           <div className="flex gap-2">
             <input
               className="w-full rounded-xl border-zinc-200/60 bg-white px-4 py-2.5 text-sm transition focus:border-brand-400 focus:ring-brand-400 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
-              placeholder="Ask about the latest news... try /latest what is trending in AI"
+              placeholder="Ask about the news... e.g. Iran USA latest"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") send();
-              }}
+              onKeyDown={(e) => { if (e.key === "Enter") send(); }}
             />
             <button
               type="button"
