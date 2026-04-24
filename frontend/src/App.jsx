@@ -10,6 +10,7 @@ import Admin from "./pages/Admin";
 import Chat from "./pages/Chat";
 import Discuss from "./pages/Discuss";
 import TrustedHighlights from "./pages/TrustedHighlights";
+import Pitch from "./pages/Pitch";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
@@ -22,6 +23,7 @@ export default function App() {
           <div className="min-h-screen bg-[#fff8f6] text-[#2d2d2d] transition-colors duration-300 dark:bg-[#121215] dark:text-[#e8e4e1]">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/pitch" element={<Pitch />} />
               <Route path="/live" element={<Live />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/videos" element={<Videos />} />

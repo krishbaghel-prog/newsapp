@@ -48,6 +48,28 @@ async function requireAuth(req, res, next) {
     };
     return next();
   } catch (err) {
+    const msg = String(err?.message || "");
+    // Sanitize any internal infrastructure or Firebase errors
+    if (
+      msg.includes("Failed to determine project ID") ||
+      msg.includes("ENOTFOUND") ||
+      msg.includes("metadata.google.internal") ||
+      msg.includes("getaddrinfo") ||
+      msg.includes("Error while making request") ||
+      msg.includes("ECONNREFUSED")
+    ) {
+      err.message = "Authentication service is temporarily unavailable. Please try again later.";
+    } else if (
+      err.code === "auth/argument-error" ||
+      err.code === "auth/id-token-expired" ||
+      err.code === "auth/id-token-revoked"
+    ) {
+      err.message = "Your session has expired. Please sign in again.";
+    } else if (msg.includes("Firebase credentials not configured") || msg.includes("Authentication service")) {
+      // Already sanitized by firebase.js — pass through as-is
+    } else {
+      err.message = "Authentication failed. Please sign in and try again.";
+    }
     err.status = 401;
     return next(err);
   }
