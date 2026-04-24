@@ -28,6 +28,39 @@ function isAdminEmail(email) {
   return getAdminEmails().includes(String(email).trim().toLowerCase());
 }
 
+/**
+ * Decode JWT payload WITHOUT verification — used as fallback when
+ * Firebase Admin SDK is not configured on the server. This lets real
+ * logged-in users post/bookmark with their actual email/name.
+ * Security note: the signature is NOT checked here; use only as fallback.
+ */
+function decodeJwtPayload(token) {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    // Base64URL decode the payload section
+    const padded = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = Buffer.from(padded, "base64").toString("utf8");
+    const payload = JSON.parse(json);
+    // Must have at minimum a subject (uid) or email to be useful
+    if (!payload.sub && !payload.email) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+const FIREBASE_UNAVAILABLE_PHRASES = [
+  "temporarily unavailable",
+  "credentials not configured",
+  "configuration error",
+  "Authentication service"
+];
+
+function isFirebaseUnavailable(msg) {
+  return FIREBASE_UNAVAILABLE_PHRASES.some((p) => msg.includes(p));
+}
+
 async function requireAuth(req, res, next) {
   try {
     const mode = String(process.env.AUTH_MODE || "firebase").toLowerCase().trim();
@@ -37,19 +70,50 @@ async function requireAuth(req, res, next) {
     }
 
     const token = getBearerToken(req);
-    if (!token) return res.status(401).json({ error: "Missing auth token" });
+    if (!token) return res.status(401).json({ error: "Missing auth token. Please sign in." });
 
-    const decoded = await verifyIdToken(token);
-    req.user = {
-      uid: decoded.uid,
-      email: decoded.email,
-      name: decoded.name,
-      photoURL: decoded.picture || ""
-    };
-    return next();
+    // ── Attempt full Firebase Admin token verification ──────────────────────
+    try {
+      const decoded = await verifyIdToken(token);
+      req.user = {
+        uid: decoded.uid,
+        email: decoded.email,
+        name: decoded.name,
+        photoURL: decoded.picture || ""
+      };
+      return next();
+    } catch (firebaseErr) {
+      const firebaseMsg = String(firebaseErr?.message || "");
+
+      // ── Firebase Admin not configured — fall back to JWT payload decode ──
+      // This lets real users post with their actual identity even when the
+      // server-side Firebase credentials are missing (e.g. on Render free tier).
+      if (isFirebaseUnavailable(firebaseMsg)) {
+        const payload = decodeJwtPayload(token);
+        if (payload) {
+          req.user = {
+            uid: payload.sub || payload.user_id || payload.email || "unknown",
+            email: payload.email || "",
+            name: payload.name || payload.email || "User",
+            photoURL: payload.picture || ""
+          };
+          // eslint-disable-next-line no-console
+          console.warn("[auth] Firebase Admin unavailable — using unverified JWT payload for:", req.user.email);
+          return next();
+        }
+        // JWT decode also failed — surface a clean error
+        return res.status(503).json({
+          error: "Authentication service is unavailable. Please try again later."
+        });
+      }
+
+      // Re-throw all other Firebase errors to be handled below
+      throw firebaseErr;
+    }
   } catch (err) {
     const msg = String(err?.message || "");
-    // Sanitize any internal infrastructure or Firebase errors
+
+    // Sanitize internal infrastructure errors
     if (
       msg.includes("Failed to determine project ID") ||
       msg.includes("ENOTFOUND") ||
@@ -58,20 +122,18 @@ async function requireAuth(req, res, next) {
       msg.includes("Error while making request") ||
       msg.includes("ECONNREFUSED")
     ) {
-      err.message = "Authentication service is temporarily unavailable. Please try again later.";
-    } else if (
+      return res.status(503).json({ error: "Authentication service is temporarily unavailable. Please try again later." });
+    }
+
+    if (
       err.code === "auth/argument-error" ||
       err.code === "auth/id-token-expired" ||
       err.code === "auth/id-token-revoked"
     ) {
-      err.message = "Your session has expired. Please sign in again.";
-    } else if (msg.includes("Firebase credentials not configured") || msg.includes("Authentication service")) {
-      // Already sanitized by firebase.js — pass through as-is
-    } else {
-      err.message = "Authentication failed. Please sign in and try again.";
+      return res.status(401).json({ error: "Your session has expired. Please sign in again." });
     }
-    err.status = 401;
-    return next(err);
+
+    return res.status(401).json({ error: "Authentication failed. Please sign in and try again." });
   }
 }
 
@@ -90,4 +152,3 @@ function requireAdmin(req, res, next) {
 }
 
 module.exports = { requireAuth, requireAdmin, isAdminEmail, getDemoUser };
-
