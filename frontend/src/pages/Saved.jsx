@@ -28,7 +28,14 @@ export default function Saved() {
         if (!cancelled) setItems(response.data?.items || []);
       } catch (e) {
         if (!cancelled) {
-          setErr(e?.response?.data?.error || "Failed to load saved articles.");
+          const msg = e?.response?.data?.error || "";
+          // Suppress auth-service errors — show generic message only
+          const isAuthErr = msg.toLowerCase().includes("auth") ||
+            msg.toLowerCase().includes("unavailable") ||
+            e?.response?.status === 401 ||
+            e?.response?.status === 503;
+          if (!isAuthErr) setErr("Could not load saved articles. Please try again.");
+          // If auth error — silently show empty state (user sees "no saves yet")
         }
       } finally {
         if (!cancelled) setBusy(false);
