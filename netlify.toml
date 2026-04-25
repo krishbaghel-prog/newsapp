@@ -1,0 +1,18 @@
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  VITE_API_BASE_URL = "https://newsapp-15ib.onrender.com/api"
+  VITE_AUTH_MODE = "firebase"
+  VITE_FIREBASE_API_KEY = "AIzaSyApdmehWBSFeq9OciNWcatYwlWN1wmh530"
+  VITE_FIREBASE_AUTH_DOMAIN = "newsapp-7arni.firebaseapp.com"
+  VITE_FIREBASE_PROJECT_ID = "newsapp-7arni"
+  VITE_FIREBASE_APP_ID = "1:417110090990:web:45c24cb1560593cde0bfff"
+  VITE_FIREBASE_MESSAGING_SENDER_ID = "417110090990"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
