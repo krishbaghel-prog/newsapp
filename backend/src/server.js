@@ -32,7 +32,16 @@ function isLocalOrigin(origin) {
 function isAllowedOrigin(origin) {
   if (!origin) return true;
   if (configuredOrigins.length === 0) return true;
+  
   const normalizedOrigin = origin.replace(/\/+$/, "");
+  
+  // Explicitly allow specific frontend deployments
+  const explicitlyAllowed = [
+    "https://newsflows2.netlify.app",
+    "https://newsflows1.netlify.app"
+  ];
+  if (explicitlyAllowed.includes(normalizedOrigin)) return true;
+  
   if (configuredOrigins.includes(normalizedOrigin)) return true;
   return isLocalOrigin(origin);
 }
