@@ -126,6 +126,8 @@ export default function Videos() {
   const [err, setErr] = useState("");
   const [warning, setWarning] = useState("");
   const [activeVideo, setActiveVideo] = useState(null);
+  const [nextPageToken, setNextPageToken] = useState("");
+  const [loadingMore, setLoadingMore] = useState(false);
 
   async function search(nextQuery) {
     setBusy(true);
@@ -136,11 +138,28 @@ export default function Videos() {
         params: { q: nextQuery, maxResults: 12 }
       });
       setItems(response.data?.items || []);
+      setNextPageToken(response.data?.nextPageToken || "");
       setWarning(response.data?.warning || "");
     } catch (e) {
       setErr(e?.response?.data?.error || "Failed to load videos.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function loadMore() {
+    if (!nextPageToken || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const response = await api.get("/videos", {
+        params: { q: query, maxResults: 12, pageToken: nextPageToken }
+      });
+      setItems((prev) => [...prev, ...(response.data?.items || [])]);
+      setNextPageToken(response.data?.nextPageToken || "");
+    } catch (e) {
+      // ignore
+    } finally {
+      setLoadingMore(false);
     }
   }
 
@@ -239,6 +258,18 @@ export default function Videos() {
           <div className="flex items-center justify-center gap-2 py-8">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
             <span className="text-sm text-zinc-500 dark:text-zinc-400">Loading videos...</span>
+          </div>
+        ) : null}
+
+        {!busy && nextPageToken && items.length > 0 ? (
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="btn-primary"
+            >
+              {loadingMore ? "Loading..." : "Load More Videos"}
+            </button>
           </div>
         ) : null}
       </main>

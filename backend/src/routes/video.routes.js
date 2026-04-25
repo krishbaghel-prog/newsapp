@@ -50,7 +50,8 @@ router.get("/", async (req, res, next) => {
         type: "video",
         order: "date",
         safeSearch: "moderate",
-        maxResults
+        maxResults,
+        ...(req.query.pageToken ? { pageToken: req.query.pageToken } : {})
       },
       timeout: 15000
     });
@@ -68,7 +69,9 @@ router.get("/", async (req, res, next) => {
       url: item?.id?.videoId ? `https://www.youtube.com/watch?v=${item.id.videoId}` : ""
     }));
 
-    res.json({ q, items });
+    const nextPageToken = response.data?.nextPageToken || "";
+
+    res.json({ q, items, nextPageToken });
   } catch (err) {
     if (axios.isAxiosError(err)) {
       return res.json({
