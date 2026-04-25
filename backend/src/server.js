@@ -42,6 +42,9 @@ function isAllowedOrigin(origin) {
   ];
   if (explicitlyAllowed.includes(normalizedOrigin)) return true;
   
+  // Allow all Vercel domains for the frontend
+  if (normalizedOrigin.endsWith(".vercel.app")) return true;
+  
   if (configuredOrigins.includes(normalizedOrigin)) return true;
   return isLocalOrigin(origin);
 }
